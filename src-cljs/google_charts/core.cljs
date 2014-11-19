@@ -35,3 +35,16 @@
     ;(.addColumn "string" "ToolTip")
     (.addRows data (clj->js vectors))
     (.draw chart data (clj->js options))))
+
+(defn draw-chart []
+  ;draw a simple line chart
+  (draw-line-chart 
+   [["number" "X"] ["number" "Y"]]
+   [[1 45] [2 15] [3 23] [4 234]]
+   {:title "DAS CHART"}
+   (.getElementById js/document "chart_div")))
+
+(.load js/google "visualization" "1" (clj->js {:packages ["corechart"
+                                                          "orgchart"]}))
+                                                         
+(.setOnLoadCallback js/google draw-chart)
