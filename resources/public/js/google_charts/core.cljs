@@ -39,8 +39,11 @@
 (defn draw-chart []
   ;draw a simple line chart
   (draw-line-chart 
-   [["number" "X"] ["number" "Y"]]
-   [[1 45] [2 15] [3 23] [4 234]]
+   [["date" "X"] ["number" "Y"]]
+   ;just because you give it dates doesn't mean it will fix the order
+   ;find a good way to sort the dates first
+   [[(new js/Date "07/11/14") 45] [(new js/Date "07/12/14") 15] 
+    [(new js/Date "07/13/14") 23] [(new js/Date "07/14/14") 234]]
    {:title "DAS CHART"}
    (.getElementById js/document "chart_div")))
 
