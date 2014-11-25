@@ -1,10 +1,6 @@
 (ns google-charts.core)
 
-(defn add-columns [data-table columns]
-  (doall ;gotta keep the doall on maps. lazy sequence...
-   (map (fn [[type name]]
-          (.addColumn data-table type name)) columns)))
-
+;Basically this whole library is stateful because it has to impact the DOM
 
 ;chart is a js/google.visualization.TypeOfChart object that has already
 ;been set to a DOM element
@@ -12,7 +8,9 @@
                   &{:keys [tooltip]
                     :or {tooltip false}}]
   (let [data (new js/google.visualization.DataTable)]
-    (add-columns data columns)
+    (doall ;gotta keep the doall on maps. lazy sequence...
+     (map (fn [[type name]]
+            (.addColumn data type name)) columns))
     (if tooltip
       (.addColumn data (clj->js {:type "string" :role "tooltip"})))
     (.addRows data (clj->js vectors))
@@ -31,7 +29,8 @@
    [["number" "X"] ["number" "Y"]]
    [[10 4 "TOOLTIP"] [23 12 "TOOLTIP"] [23 41 "TOOLTIP"] [13 4 "TOOLTIP"]
     [12 42 "TOOLTIP"] [21 54 "TOOLTIP"] [12 53 "TOOLTIP"]]
-   {:title "My Chart 'o the Scatter variety"}
+   {:title "My Chart 'o the Scatter variety"
+    :explorer {}}
    (new js/google.visualization.ScatterChart (.getElementById js/document "scatter_chart_div")) ;this should be a macro or function
    :tooltip true)
   ;org chart example
@@ -39,9 +38,39 @@
    [["string" "Name"] ["string" "Yo Daddy"]]
    [["Mary" "Daddy"] ["Stephen" "Mary"] ["James" "Daddy"] ["Jim" "James"] ["Ted" "Jim"]]
    {}
-   (new js/google.visualization.OrgChart (.getElementById js/document "org_chart_div"))))
+   (new js/google.visualization.OrgChart (.getElementById js/document "org_chart_div")))
+  ;area chart example - stolen from google. I'm lazy
+  (draw-chart
+   [["string" "Year"] ["number" "Sales"] ["number" "Expenses"]]
+   [["2013" 1000 400] ["2014" 1170 460] ["2015" 660 1120] ["2016" 1030 540]]
+   {:title "Company Performance"
+    :hAxis {:title "Year" :titleTextStyle {:color "#333"}}
+    :vAxis {:minValue 0}}
+   (new js/google.visualization.AreaChart (.getElementById js/document "area_chart_div")))
+  ;calender chart - stolen from google
+  (draw-chart
+   [["date" "Date"] ["number" "Win/Loss"]]
+   [[(new js/Date 2012 3 13) 37032] [(new js/Date 2012 3 14) 38024]
+    [(new js/Date 2012 3 15) 38024] [(new js/Date 2012 3 16) 38108]
+    [(new js/Date 2012 3 17) 38229] [(new js/Date 2013 9 4) 38177]
+    [(new js/Date 2013 9 5) 38705] [(new js/Date 2013 9 12) 38210]
+    [(new js/Date 2013 9 13) 38029] [(new js/Date 2013 9 19) 38823]
+    [(new js/Date 2013 9 23) 38345] [(new js/Date 2013 9 24) 38436]
+    [(new js/Date 2013 9 30) 38447]]
+   {:title "Red Sox Attendance" :height 350}
+   (new js/google.visualization.Calendar (.getElementById js/document "calendar_chart_div")))
+  ;map example from google
+  (draw-chart
+   [["string" "Country"] ["string" "Population"]]
+   [["China" "China: 1,363,800,000"] ["India" "India: 1,242,620,000"]
+    ["US" "US: 317,842,000"] ["Indonesia" "Indonesia: 247,424,598"]
+    ["Brazil" "Brazil: 201,032,714"] ["Pakistan" "Pakistan: 186,134,000"]
+    ["Nigeria" "Nigeria: 173,615,000"] ["Bangladesh" "Bangladesh: 152,518,015"]
+    ["Russia" "Russia: 146,019,512"] ["Japan" "Japan: 127,120,000"]]
+   {:showTip true}
+   (new js/google.visualization.Map(.getElementById js/document "map_chart_div"))))
 
-(.load js/google "visualization" "1" (clj->js {:packages ["corechart"
-                                                          "orgchart"]})) ;macro or function
+(.load js/google "visualization" "1" (clj->js {:packages ["corechart" "orgchart" "calendar"
+                                                          "map"]})) ;macro or function
 
 (.setOnLoadCallback js/google draw-demo-chart)
