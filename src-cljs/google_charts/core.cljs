@@ -5,49 +5,43 @@
    (map (fn [[type name]]
           (.addColumn data-table type name)) columns)))
 
-(defn draw-scatter-chart [columns vectors options chart-dom-element
-                         &{:keys [tooltip]
-                           :or {tooltip false}}]
-  (let [chart (new js/google.visualization.ScatterChart 
-                   chart-dom-element)
-        data (new js/google.visualization.DataTable)]
+
+;chart is a js/google.visualization.TypeOfChart object that has already
+;been set to a DOM element
+(defn draw-chart [columns vectors options chart
+                  &{:keys [tooltip]
+                    :or {tooltip false}}]
+  (let [data (new js/google.visualization.DataTable)]
     (add-columns data columns)
     (if tooltip
       (.addColumn data (clj->js {:type "string" :role "tooltip"})))
     (.addRows data (clj->js vectors))
     (.draw chart data (clj->js options))))
 
-(defn draw-line-chart [columns vectors options chart-dom-element]
-  (let [chart (new js/google.visualization.LineChart chart-dom-element)
-        data (new js/google.visualization.DataTable)]
-    (add-columns data columns) ;gross mutation
-    (.addRows data (clj->js vectors))
-    (.draw chart data (clj->js options))))
-
-;make this more generic
-(defn draw-org-chart [vectors item-col-name item-parent-name chart-dom-element]
-  (let [options {:allowHtml true}
-        data (new js/google.visualization.DataTable)
-        chart (new js/google.visualization.ScatterChart
-                   chart-dom-element)]
-    (.addColumn data "string" item-col-name)
-    (.addColumn data "string" item-parent-name)
-    ;(.addColumn "string" "ToolTip")
-    (.addRows data (clj->js vectors))
-    (.draw chart data (clj->js options))))
-
-(defn draw-chart []
-  ;draw a simple line chart
-  (draw-line-chart 
+(defn draw-demo-chart []
+  ;a line chart example
+  (draw-chart
    [["date" "X"] ["number" "Y"]]
-   ;just because you give it dates doesn't mean it will fix the order
-   ;find a good way to sort the dates first
-   [[(new js/Date "07/11/14") 45] [(new js/Date "07/12/14") 15] 
+   [[(new js/Date "07/11/14") 45] [(new js/Date "07/12/14") 15]
     [(new js/Date "07/13/14") 23] [(new js/Date "07/14/14") 234]]
    {:title "DAS CHART"}
-   (.getElementById js/document "chart_div")))
+   (new js/google.visualization.LineChart (.getElementById js/document "line_chart_div")))
+  ;scatter chart example
+  (draw-chart
+   [["number" "X"] ["number" "Y"]]
+   [[10 4 "TOOLTIP"] [23 12 "TOOLTIP"] [23 41 "TOOLTIP"] [13 4 "TOOLTIP"]
+    [12 42 "TOOLTIP"] [21 54 "TOOLTIP"] [12 53 "TOOLTIP"]]
+   {:title "My Chart 'o the Scatter variety"}
+   (new js/google.visualization.ScatterChart (.getElementById js/document "scatter_chart_div")) ;this should be a macro or function
+   :tooltip true)
+  ;org chart example
+  (draw-chart
+   [["string" "Name"] ["string" "Yo Daddy"]]
+   [["Mary" "Daddy"] ["Stephen" "Mary"] ["James" "Daddy"] ["Jim" "James"] ["Ted" "Jim"]]
+   {}
+   (new js/google.visualization.OrgChart (.getElementById js/document "org_chart_div"))))
 
 (.load js/google "visualization" "1" (clj->js {:packages ["corechart"
-                                                          "orgchart"]}))
-                                                         
-(.setOnLoadCallback js/google draw-chart)
+                                                          "orgchart"]})) ;macro or function
+
+(.setOnLoadCallback js/google draw-demo-chart)
