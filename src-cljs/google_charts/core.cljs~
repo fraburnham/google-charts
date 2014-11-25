@@ -1,4 +1,0 @@
-(ns google-charts.core)
-
-(.write js/document "Hello!")
-
